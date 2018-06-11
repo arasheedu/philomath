@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Philomath</title>
+    <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+<body>
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        #cover {
+            background: #222 url('') center center no-repeat;
+            background-size: cover;
+            height: 50%;
+            text-align: center;
+            display: flex;
+            align-items: center;
+        }
+
+        #cover-caption {
+            width: 100%;
+        }
+
+        #btn-default,
+        #btn-default:default,
+        #btn-default:active,
+        #btn-default:visited,
+        #btn-default:focus {
+            background-color: #8064A2;
+            border-color: #8064A2;
+        }
+
+    </style>
+    <section id="cover">
+        <div id="cover-caption">
+            <div id="container" class="container">
+                <div class="row text-white">
+                    <div class="col-sm-10 offset-sm-1 text-center">
+                        <h1 class="display-3">fɪləmæθ</h1>
+                        <div class="info-form">
+                            <form action="" class="form-inline justify-content-center">
+                                <div class="form-group">
+                                    <label class="sr-only">Keyword</label>
+                                    <input type="text" class="form-control" placeholder="Keyword" id="keyword">
+                                </div>
+                                <button type="submit" class="btn btn-success ">Search</button>
+                            </form>
+                        </div>
+                        <br />
+                        <div>
+                            <button class="btn btn-default" role="button" id="urldrop">Drag and Drop Url Here!</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <form>
+        <div col-md-3>
+            <ul class="list-group row"></ul>
+        </div>
+    </form>
+    <script>
+        const electron = require("electron");
+        const elasticsearch = require('elasticsearch');
+        const { ipcRenderer } = electron;
+        const form = document.querySelector("form");
+        const ul = document.querySelector("ul");
+        var req = require('request');
+        var decode = require('urldecode')
+
+        let shell = require('electron').shell;
+
+        form.addEventListener("submit", submitForm);
+
+        function submitForm(e) {
+            e.preventDefault();
+            const keyword = document.querySelector("#keyword").value;
+            ipcRenderer.send("item:search", keyword);
+        }
+
+        var esclient = new elasticsearch.Client({
+            host: 'http://127.0.0.1:9200',
+            log: 'trace'
+        });
+
+        document.addEventListener('click', function (event) {
+            if (event.target.tagName === 'A' && event.target.href.startsWith('http')) {
+                event.preventDefault()
+                shell.openExternal(event.target.href)
+            }
+        });
+
+        document.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        document.addEventListener("drop", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.target.id == "urldrop") {
+                var data = decode(event.dataTransfer.getData("Text").toString());
+                req.post({
+                    url: 'http://127.0.0.1:8080/url',
+                    body: data
+                });
+                return false;
+            }
+        });
+
+        document.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+
+        ipcRenderer.on("item:search", function (e, keyword) {
+            esclient.search({
+                index: 'philomathv1',
+                type: 'philomathitem',
+                body: {
+                    query: {
+                        match: {
+                            body: keyword
+                        }
+                    },
+                    sort: [
+                        { "__score": { "order": "desc", "unmapped_type": "float" } }
+                    ]
+                }
+            }).then(function (resp) {
+                ul.innerHTML = '';
+                var hits = resp.hits.hits;
+                for (let i = 0; i < hits.length; i++) {
+                    const li = document.createElement("li");
+                    li.className = "list-group-item";
+                    const span1 = document.createElement("img");
+                    span1.id = hits[i]._id;
+                    span1.className = "badge pull-left"
+                    span1.innerText = "favicon"
+                    span1.src = "http://www.google.com/s2/favicons?domain=" + hits[i]._source.url;
+                    li.appendChild(span1);
+                    span2 = document.createElement("a");
+                    span2.href = hits[i]._source.url;
+                    span2.innerText = hits[i]._source.title;
+                    li.appendChild(span2);
+                    ul.appendChild(li);
+                }
+            },
+                function (err) {
+                    console.trace(err.message);
+                });
+        });
+    </script>
+</body>
+</html>

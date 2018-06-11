@@ -1,0 +1,24 @@
+version: '3'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.4
+    container_name: elasticsearch
+    command: elasticsearch -Ecluster.name=philomath -Ehttp.port=9200 -Ehttp.cors.allow-origin="*" -Ehttp.cors.enabled=true -Ehttp.cors.allow-headers=X-Requested-With,X-Auth-Token,Content-Type,Content-Length,Authorization -Ehttp.cors.allow-credentials=true -Ehttp.cors.allow-methods=OPTIONS,HEAD,GET,POST,PUT,DELETE
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+     - 9200:9200
+    volumes:
+     - ./esindex\:/usr/share/elasticsearch/data/
+  kibana:
+    image: docker.elastic.co/kibana/kibana-oss:6.2.4
+    ports:
+      - 5601:5601
+    links:
+      - elasticsearch
+  philomath:
+    image: philomath
+    ports:
+      - 8080:8080
+    links:
+      - elasticsearch

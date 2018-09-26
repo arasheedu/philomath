@@ -71,7 +71,7 @@
         const form = document.querySelector("form");
         const ul = document.querySelector("ul");
         var req = require('request');
-        var decode = require('urldecode')
+        var decode = require('urldecode');
 
         let shell = require('electron').shell;
 
@@ -103,7 +103,7 @@
         document.addEventListener("drop", function (event) {
             event.preventDefault();
             event.stopPropagation();
-            if (event.target.id == "urldrop") {
+            if (event.target.id === "urldrop") {
                 var data = decode(event.dataTransfer.getData("Text").toString());
                 req.post({
                     url: 'http://127.0.0.1:8080/url',

@@ -32,9 +32,14 @@ class Philomath:
         configure_logging()
         url = req.stream.read().decode('utf-8')
         decodedurl = urllib2.unquote(url).decode('utf8')
-        crawlerProcess=Process(target=crawlthread.crawl, kwargs={"url" : decodedurl})
-        crawlerProcess.start()
-        crawlerProcess.join()
+        already_indexed = es.exists(index=settings.INDEX_NAME,doc_type='philomathitem',id=decodedurl)
+        if not already_indexed:
+            logging.warning('not indexed')
+            crawlerProcess=Process(target=crawlthread.crawl, kwargs={"url" : decodedurl})
+            crawlerProcess.start()
+            crawlerProcess.join()
+        else:
+            logging.warning('already indexed')
         resp.status = falcon.HTTP_200
 
 api = falcon.API()

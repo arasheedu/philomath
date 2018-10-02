@@ -17,7 +17,7 @@ class PhilomathSpider(scrapy.Spider):
        item = PhilomathItem()
        item['url'] = response.url
        item['title'] = hxs.xpath('//title/text()').extract()
-       item['body'] = hxs. xpath('//body//text()').extract()
+       item['body'] = ' '.join(filter(bool, map(unicode.strip, hxs.xpath('//body//text()').extract())))
        item['date'] = datetime.datetime.now().strftime("%m-%d-%Y %H:%M:%S")
        yield item
 

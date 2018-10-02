@@ -9,6 +9,7 @@ es = Elasticsearch(hosts = [settings.SEARCH_HOST])
 class PhilomathPipeline(object):     
     def process_item(self, item, spider):
         item_to_index = {
+            '_id': item['url'],
             '_index': settings.INDEX_NAME,
             '_type': settings.TYPE_NAME,
             '_source': dict(item)

@@ -33,7 +33,10 @@
             background-color: #8064A2;
             border-color: #8064A2;
         }
-
+        .badge {
+            vertical-align: middle;
+            padding: .25em 1em;
+        }
     </style>
     <section id="cover">
         <div id="cover-caption">
@@ -72,8 +75,11 @@
         const ul = document.querySelector("ul");
         var req = require('request');
         var decode = require('urldecode');
-
+        var fs = require('fs');
         let shell = require('electron').shell;
+
+        var esUrl = 'http://127.0.0.1:9200';
+        var philomathUrl = 'http://127.0.0.1:8080/url';
 
         form.addEventListener("submit", submitForm);
 
@@ -83,15 +89,10 @@
             ipcRenderer.send("item:search", keyword);
         }
 
-        var esclient = new elasticsearch.Client({
-            host: 'http://127.0.0.1:9200',
-            log: 'trace'
-        });
-
         document.addEventListener('click', function (event) {
             if (event.target.tagName === 'A' && event.target.href.startsWith('http')) {
                 event.preventDefault()
-                shell.openExternal(event.target.href)
+                shell.openExternal(event.target.href);
             }
         });
 
@@ -104,11 +105,31 @@
             event.preventDefault();
             event.stopPropagation();
             if (event.target.id === "urldrop") {
-                var data = decode(event.dataTransfer.getData("Text").toString());
-                req.post({
-                    url: 'http://127.0.0.1:8080/url',
-                    body: data
-                });
+                if (event.dataTransfer.files.length !== 0) {
+                    var file = event.dataTransfer.files[0].path;
+                    if (file !== null) {
+                        console.log('bookmark file is ', file);
+                        var bookmarkJson = JSON.parse(fs.readFileSync(require.resolve(file)));
+                        Object.keys(bookmarkJson.roots).map(e1 => {
+                            console.log(`key= ${e1} value = ${bookmarkJson.roots[e1]}`);
+                            Object.keys(bookmarkJson.roots[e1].children).map(e2 => {
+                                console.log(bookmarkJson.roots[e1].children[e2].url);
+                                req.post({
+                                    url: philomathUrl,
+                                    body: bookmarkJson.roots[e1].children[e2].url
+                                });
+                            });
+                        });
+                    }
+                }
+                else {
+                    var data = decode(event.dataTransfer.getData("Text").toString());
+                    req.post({
+                        url: philomathUrl,
+                        body: data
+                    });
+
+                }
                 return false;
             }
         });
@@ -118,8 +139,11 @@
             e.stopPropagation();
         });
 
-
         ipcRenderer.on("item:search", function (e, keyword) {
+            var esclient = new elasticsearch.Client({
+                host: esUrl,
+                log: 'trace'
+            });
             esclient.search({
                 index: 'philomathv1',
                 type: 'philomathitem',
@@ -141,8 +165,8 @@
                     li.className = "list-group-item";
                     const span1 = document.createElement("img");
                     span1.id = hits[i]._id;
-                    span1.className = "badge pull-left"
-                    span1.innerText = "favicon"
+                    span1.className = "badge pull-left";
+                    span1.innerText = "favicon";
                     span1.src = "http://www.google.com/s2/favicons?domain=" + hits[i]._source.url;
                     li.appendChild(span1);
                     span2 = document.createElement("a");
@@ -152,9 +176,9 @@
                     ul.appendChild(li);
                 }
             },
-                function (err) {
-                    console.trace(err.message);
-                });
+            function (err) {
+                console.trace(err.message);
+            });
         });
     </script>
 </body>

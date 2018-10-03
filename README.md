@@ -20,11 +20,13 @@ c:\philomathclient> npm start .
 
 The rest is self explanatory ;-)
 
+![alt text](https://github.com/arasheedu/philomath/blob/master/2018-10-03_13-09-09.gif)
+
+
 ![alt text](https://github.com/arasheedu/philomath/blob/master/2018-09-28_14-07-34.gif)
 
-![alt text](https://github.com/arasheedu/philomath/blob/master/philomathclient.jpg)
 
 License
-----
+-------
 
 MIT

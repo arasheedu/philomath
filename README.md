@@ -4,7 +4,7 @@ Philomath helps you index your bookmarks on your machine such that they can be s
 
 This has been developed on Windows 10 and Docker for Windows is a pre-requisite to run the solution
 
-### Installation
+### Running from source
 
 ```sh
 c:\> cd philomath

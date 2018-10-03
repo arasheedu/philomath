@@ -20,7 +20,7 @@ c:\philomathclient> npm start .
 
 The rest is self explanatory ;-)
 
-![alt text](https://github.com/arasheedu/philomath/blob/master/2018-10-03_13-09-09.gif)
+![alt text](https://github.com/arasheedu/philomath/blob/master/2018-10-03_14-17-39.gif)
 
 License
 -------
